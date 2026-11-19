@@ -1,0 +1,6 @@
+{
+  "name": "preprod-platform",
+  "environment": "tst",
+  "region": "northeurope",
+  "replicas": 2
+}
