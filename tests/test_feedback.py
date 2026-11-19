@@ -2,7 +2,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from scripts.feedback import candidate, event_pr, evidence_url, model_proposal, publish, render
+from scripts.feedback import candidate, classify, event_pr, evidence_url, publish, render
 
 REPO = "example/platform-change-feedback-lab"
 PR = f"https://github.com/{REPO}/pull/3"
@@ -15,15 +15,26 @@ DATA = {
 
 
 class FeedbackTests(unittest.TestCase):
-    def test_model_can_abstain(self):
-        self.assertIsNone(model_proposal({"candidate": None}, [{"url": PR}]))
+    def test_structured_review_must_come_from_owner_or_copilot(self):
+        body = "```platform-feedback\n" + json.dumps(DATA) + "\n```"
+        item = {"author": "untrusted", "kind": "review", "text": body, "url": PR}
+        self.assertIsNone(classify([item], [], "", "example"))
+        item["author"] = "copilot-pull-request-reviewer[bot]"
+        proposal = classify([item], [], "", "example")
+        self.assertEqual(proposal["candidate"], DATA)
+        self.assertEqual(proposal["evidence"], PR)
 
-    def test_model_must_cite_collected_evidence(self):
-        evidence = [{"url": PR + "#discussion_r9"}]
-        proposal = model_proposal({"candidate": {**DATA, "evidence": 1}}, evidence)
-        self.assertEqual(proposal, {"candidate": DATA, "evidence": evidence[0]["url"]})
-        with self.assertRaisesRegex(ValueError, "outside"):
-            model_proposal({"candidate": {**DATA, "evidence": 2}}, evidence)
+    def test_profile_rule_requires_change_review_and_ci_gap(self):
+        ci = "      - run: python -B plan.py profiles/dev.json\n"
+        item = {
+            "author": "example", "kind": "review", "url": PR,
+            "text": "CI checks profiles/dev.json but does not check the new profile.",
+        }
+        files = [{"filename": "profiles/test.json", "status": "added"}]
+        self.assertEqual(classify([item], files, ci, "example")["candidate"]["category"], "lint-ci")
+        self.assertIsNone(classify([item], [], ci, "example"))
+        self.assertIsNone(classify([], files, ci, "example"))
+        self.assertIsNone(classify([item], files, "- run: python -B -m unittest", "example"))
 
     def test_reject_content_that_would_ping_or_link(self):
         with self.assertRaises(ValueError):

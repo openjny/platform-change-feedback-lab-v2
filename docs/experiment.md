@@ -44,10 +44,12 @@ candidate. Keep the label on triaged items so reruns can still find them.
    `gh pr edit PR_NUMBER --repo OWNER/REPO --add-reviewer @copilot` if your
    plan permits it. A human or an independently run agent can also leave a
    review. Record observations that would help future changes.
-3. As the repository owner, merge into `main`. PR Feedback reads review
-   text, inline comments, check results, and bounded file diffs. The model
-   chooses at most one candidate and must point to a review or failed check.
-   The publish job adds the label and links the source PR and evidence.
+3. As the repository owner, merge into `main` after review finishes. PR
+   Feedback reads review bodies, inline comments, check results, and changed
+   paths. It accepts a valid [structured review](../REVIEW.md) from Copilot
+   or the owner. It can also confirm the planner-specific profile coverage gap
+   by comparing the review, changed paths, and CI configuration. The publish
+   job adds the label and links the source PR and review.
 4. Re-run a positive workflow once to verify that it returns the same issue.
    Merge a clean PR to verify that it leaves no candidate. Closing without
    merging and merging a fork PR do not trigger publication.

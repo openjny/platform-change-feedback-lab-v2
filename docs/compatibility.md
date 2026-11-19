@@ -16,9 +16,15 @@ Visual Studio compatibility here is based on documentation. Verify the actual
 Visual Studio version, Agent mode, skill discovery, and the terminal approval
 flow on the target workstation before rollout.
 
-The PR workflow uses [GitHub Models from Actions](https://github.blog/ai-and-ml/llms/solving-the-inference-problem-for-open-source-ai-projects-with-github-models/)
-for inference, not Copilot CLI or a Copilot session export. This avoids
-installing a personal Copilot token into a public lab. A Copilot-driven
+The [first trial](https://github.com/openjny/platform-change-feedback-lab/actions/runs/44493794002)
+collected review evidence but could not parse the GitHub Models response.
+A separate request through the lab environment returned HTTP 200 with a
+plain-text `OK`, not a completion. This does not establish a general service
+limitation.
+
+This version uses native GitHub Copilot review and a bounded classifier,
+without giving Actions a personal model token. It does not infer general
+improvements from arbitrary review text. Using a Copilot-backed
 [agentic workflow](https://docs.github.com/en/copilot/how-tos/github-agentic-workflows/creating-github-agentic-workflows)
-can use the same evidence and issue format, but its Copilot access and billing
-need separate validation.
+for that broader analysis requires separately validating organization billing
+or an approved, scoped credential.
