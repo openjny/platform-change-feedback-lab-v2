@@ -11,7 +11,10 @@ class PlanTests(unittest.TestCase):
         self.plan = json.loads(profile.read_text(encoding="utf-8"))
 
     def test_reference_plan(self):
-        self.assertEqual(validate(self.plan), [])
+        profiles = Path(__file__).resolve().parents[1] / "profiles"
+        for file in sorted(profiles.glob("*.json")):
+            with self.subTest(profile=file.name):
+                self.assertEqual(validate(json.loads(file.read_text(encoding="utf-8"))), [])
 
     def test_production_requires_redundancy(self):
         self.plan["environment"] = "prd"

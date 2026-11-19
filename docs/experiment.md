@@ -34,8 +34,11 @@ python -B scripts/feedback.py publish .feedback/task-12.json --repo OWNER/REPO
 ```
 
 `preview` is offline. `publish` creates a candidate with a backlink to the
-work issue. A repeated publish with the same work item returns the existing
-candidate. Keep the label on triaged items so reruns can still find them.
+work issue. It records the issue number in `.feedback/receipts/`. A serial
+retry from the same checkout looks up that number directly, even if the
+labeled issue list has not refreshed yet. Keep the label on triaged items so
+other checkouts and workflow reruns can find them. Do not publish the same
+source concurrently from different machines.
 
 ## Merge a reviewed PR
 

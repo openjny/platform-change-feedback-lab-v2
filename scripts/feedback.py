@@ -84,14 +84,36 @@ def publish(repo, title, body):
         "api", "--paginate", "--slurp",
         f"repos/{repo}/issues?state=all&labels={LABEL}&per_page=100",
     ))
-    for page in pages:
-        for issue in page:
-            if "pull_request" not in issue and marker in (issue["body"] or "").splitlines():
-                print(f"Already recorded: {issue['html_url']}")
-                return
+    matches = [
+        issue for page in pages for issue in page
+        if "pull_request" not in issue and marker in (issue["body"] or "").splitlines()
+    ]
+    if matches:
+        url = min(matches, key=lambda issue: issue["number"])["html_url"]
+        print(f"Already recorded: {url}")
+        return url
     url = gh("issue", "create", "--repo", repo, "--title", title, "--label", LABEL,
              "--body-file", "-", body=body)
     print(f"Created: {url}")
+    return url
+
+
+def publish_local(repo, task, title, body, directory):
+    directory.mkdir(parents=True, exist_ok=True)
+    receipt = directory / f"{repo.replace('/', '_')}-task-{task}.json"
+    marker = body.splitlines()[0]
+    if receipt.is_file():
+        issue_number = number(json.loads(receipt.read_text(encoding="utf-8")))
+        issue = api(f"repos/{repo}/issues/{issue_number}")
+        if marker not in (issue["body"] or "").splitlines():
+            raise ValueError("The recorded issue no longer has the draft's source marker.")
+        print(f"Already recorded: {issue['html_url']}")
+        return
+    url = publish(repo, title, body)
+    match = re.fullmatch(rf"https://github\.com/{re.escape(repo)}/issues/([0-9]+)", url)
+    if match is None:
+        raise ValueError("Issue publication did not return a URL in the target repository.")
+    receipt.write_text(match[1] + "\n", encoding="utf-8", newline="\n")
 
 
 def local_command(args):
@@ -116,7 +138,8 @@ def local_command(args):
         raise ValueError("The explicit repository does not match this checkout's GitHub origin.")
     if "pull_request" in api(f"repos/{repo}/issues/{task}"):
         raise ValueError("The local draft must cite a work issue, not a pull request.")
-    publish(repo, title, body)
+    publish_local(repo, task, title, body,
+                  Path(__file__).resolve().parents[1] / ".feedback" / "receipts")
 
 
 def event_pr(event, repo):

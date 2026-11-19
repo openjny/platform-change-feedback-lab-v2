@@ -20,4 +20,3 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -B -m unittest discover -s tests -v
-      - run: python -B plan.py profiles/dev.json
