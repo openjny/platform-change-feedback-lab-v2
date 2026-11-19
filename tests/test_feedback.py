@@ -72,12 +72,12 @@ class FeedbackTests(unittest.TestCase):
         self.assertIn(PR + "#discussion_r9", creates[0].kwargs["body"])
 
     @patch("scripts.feedback.gh")
-    def test_local_retry_uses_the_receipt_not_an_issue_list(gh_self, gh):
+    def test_local_retry_uses_the_receipt_not_an_issue_list(self, gh):
         title, body = render(DATA, f"https://github.com/{REPO}/issues/2", "local:task-2")
         url = f"https://github.com/{REPO}/issues/5"
         gh.side_effect = ["[[]]", url, json.dumps({"body": body, "html_url": url})]
         with TemporaryDirectory() as scratch:
             publish_local(REPO, 2, title, body, Path(scratch))
             publish_local(REPO, 2, title, body, Path(scratch))
-        gh_self.assertEqual(gh.call_args_list[-1].args, ("api", f"repos/{REPO}/issues/5"))
-        gh_self.assertEqual(len([c for c in gh.call_args_list if c.args[:2] == ("issue", "create")]), 1)
+        self.assertEqual(gh.call_args_list[-1].args, ("api", f"repos/{REPO}/issues/5"))
+        self.assertEqual(len([c for c in gh.call_args_list if c.args[:2] == ("issue", "create")]), 1)
