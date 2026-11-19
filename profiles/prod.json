@@ -1,0 +1,6 @@
+{
+  "name": "prod-platform",
+  "environment": "prd",
+  "region": "northeurope",
+  "replicas": 2
+}

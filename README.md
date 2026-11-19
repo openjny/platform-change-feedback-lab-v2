@@ -15,6 +15,9 @@ python -B -m unittest discover -s tests -v
 
 The planner prints `Valid plan` for a valid profile. A rejected profile prints
 the field errors and exits with status 2. There are no external packages.
+Profile filenames can describe their role. The `environment` field uses
+`dev`, `tst`, or `prd`; the [preproduction example](profiles/preprod.json)
+uses `tst`. CI validates every JSON profile in `profiles/`.
 
 ## Try the feedback loop
 
